@@ -1,0 +1,76 @@
+---
+- name: Installing required packages for Chatapp machine
+  package:
+    name:
+      - epel-release
+      - git
+    state: latest
+  tags:
+    - deploy
+
+- name: Adding the user chatapp
+  become: yes
+  user:
+    name: "{{ username }}"
+    password: "{{ password }}"
+  tags:
+    - deploy
+
+- name: Changing the file permission for chatapp home directory
+  file:
+    path: /home/{{ username }}
+    mode: '0755'
+  tags:
+    - deploy
+
+- name: Creating directory for the chatapp
+  file:
+    path: /home/{{ username }}/app
+    state: directory
+    mode: '0755'
+  tags:
+    - deploy
+
+- name: Checking for git app folder does not exist
+  stat:
+    path: /home/{{ username }}/app/{{ github_repo }}
+  tags:
+    - deploy
+  register: folder_details
+
+- name: Attempting to Git clone in app directory, will skip if exist
+  become: yes
+  args:
+    chdir: /home/{{ username }}/app/
+  command: git clone https://github.com/ezesundayeze/{{ github_repo }}.git
+  tags:
+    - deploy
+  when: not folder_details.stat.exists
+
+- include_role:
+    name: packages
+  tags:
+    - deploy
+
+- name: Checking if chatapp service is registered in the systemd
+  stat:
+    path: /etc/systemd/system/chatapp.service
+  register: service_details
+  tags:
+    - deploy
+
+- name: Using the chatapp_service.j2 template to register the chatapp service
+  template:
+    src: chatapp_service.j2
+    dest: /etc/systemd/system/chatapp.service
+    owner: "{{ username }}"
+    mode: "0755"
+  tags:
+    - deploy
+  when: not service_details.stat.exists
+
+- name: Triggers the restart of chatapp.service
+  command: /bin/true
+  notify: Restarting the chatapp service
+  tags:
+   - deploy

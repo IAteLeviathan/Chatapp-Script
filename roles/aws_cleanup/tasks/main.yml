@@ -1,0 +1,119 @@
+---
+- name: Gathering EC2 instance information for cleanup
+  ec2_instance_facts:
+    region: "{{ aws_region }}"
+    filters:
+     "tag:Name": "{{ ec2_name }}"
+     instance-state-name: running
+  tags:
+    - cleanup
+  register: ec2_facts
+
+- name: Gathering route table information for cleanup
+  ec2_vpc_route_table_facts:
+    region: "{{ aws_region }}"
+    filters:
+      "tag:Name": "{{ vpc_prefix }}_rtable"
+  tags:
+    - cleanup
+  register: ec2_route_table
+
+- name: Gathering security group information for cleanup
+  ec2_group_facts:
+    region: "{{ aws_region }}"
+    filters:
+      group-name: "{{ vpc_prefix }}_secgroup"
+  tags:
+    - cleanup
+  register: ec2_secgroup
+
+- name: Gathering subnet information for cleanup
+  ec2_vpc_subnet_facts:
+    region: "{{ aws_region }}"
+    filters:
+      "tag:Name": "{{ vpc_prefix }}_subnet"
+  tags:
+    - cleanup
+  register: ec2_subnet
+
+- name: Gathering VPC information for cleanup
+  ec2_vpc_net_facts:
+    region: "{{ aws_region }}"
+    filters:
+      "tag:Name": "{{ vpc_prefix }}_VPC"
+  tags:
+    - cleanup
+  register: ec2_vpc
+
+- name: Cleaning Elastic Ip
+  ec2_eip:
+    region: "{{ aws_region }}"
+    device_id: "{{ ec2_facts.instances[0].instance_id }}"
+    ip: "{{ ec2_facts.instances[0].public_ip_address }}"
+    release_on_disassociation: yes
+    state: absent
+  tags:
+    - cleanup
+  when: ec2_facts.instances[0] is defined
+
+- name: Cleaning EC2 instance
+  ec2:
+    region: "{{ aws_region }}"
+    state: 'absent'
+    instance_ids: '{{ ec2_facts.instances[0].instance_id }}'
+  tags:
+    - cleanup
+  when: ec2_facts.instances[0] is defined
+
+- name: Cleaning Internet Gateway
+  ec2_vpc_igw:
+    region: "{{ aws_region }}"
+    vpc_id: "{{ ec2_route_table.route_tables[0].vpc_id }}"
+    state: absent
+  tags:
+    - cleanup
+  when: ec2_route_table.route_tables[0] is defined
+
+- name: Cleaning Routing Table
+  ec2_vpc_route_table:
+    vpc_id: "{{ ec2_route_table.route_tables[0].vpc_id }}"
+    region: "{{ aws_region }}"
+    route_table_id: "{{ ec2_route_table.route_tables[0].id }}"
+    lookup: id
+    state: absent
+  tags:
+    - cleanup
+  when: ec2_route_table.route_tables[0] is defined
+
+- name: Waiting for dependencies to disallocate waiting one minute
+  pause:
+    minutes: 1
+
+- name: Cleaning Security Group
+  ec2_group:
+    region: "{{ aws_region }}"
+    group_id: "{{ ec2_secgroup.security_groups[0].group_id }}"
+    state: absent
+  tags:
+    - cleanup
+  when: ec2_secgroup.security_groups[0] is defined
+
+- name: Cleaning Subnet
+  ec2_vpc_subnet:
+    region: "{{ aws_region }}"
+    state: absent
+    vpc_id: "{{ ec2_subnet.subnets[0].vpc_id }}"
+    cidr: "{{ vpc_subnet_cidr }}"
+  tags:
+    - cleanup
+  when: ec2_subnet.subnets[0] is defined
+
+- name: Cleaning VPC
+  ec2_vpc_net:
+    state: absent
+    region: "{{ aws_region }}"
+    cidr_block: "{{ vpc_cidr }}"
+    name: "{{ vpc_prefix }}_VPC"
+  tags:
+    - cleanup
+  when: ec2_vpc.vpcs[0] is defined

@@ -1,0 +1,19 @@
+---
+- name: Installing the required packages for MongoDB Server
+  package:
+    name:
+      - mongodb-2.6.12-6.el7.x86_64      
+      - mongodb-server
+    state: latest
+  notify:
+    - Enables and restarts mongod service
+  tags:
+    - deploy
+
+- name: Copying the template dbconnect.j2 to app database
+  template:
+    src: dbconnect.j2
+    dest: /home/{{ username }}/app/{{ github_repo }}/dbconnect.js
+  tags:
+    - deploy
+

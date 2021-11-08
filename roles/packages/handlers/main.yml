@@ -1,0 +1,16 @@
+---
+- name: Enables and restarts nginx service
+  systemd:
+    name: nginx
+    state: restarted
+    enabled: yes
+  tags:
+    - deploy
+
+- name: Enables and restarts mongod service
+  systemd:
+    name: mongod
+    state: restarted
+    enabled: yes
+  tags:
+    - deploy

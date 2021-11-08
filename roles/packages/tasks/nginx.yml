@@ -1,0 +1,15 @@
+---
+- name: Installing nginx package
+  package:
+    name: nginx
+    state: present
+  tags:
+    - deploy
+
+- name: Copying template nginx.j2 into the nginx.conf file
+  template:
+    src: nginx.j2
+    dest: /etc/nginx/nginx.conf
+  notify: Enables and restarts nginx service
+  tags:
+    - deploy

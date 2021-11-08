@@ -1,0 +1,16 @@
+---
+- name: Gathering status info for both nginx and chatapp service
+  service_facts:
+  register: ec2_services
+  tags:
+    - info
+- debug:
+    msg: "The current nginx service status: {{ ec2_services.ansible_facts.services['nginx.service']['state'] }}"
+  tags:
+    - info
+  when: ec2_services.ansible_facts.services['nginx.service'] is defined
+- debug:
+    msg: "The current chatapp service status: {{ ec2_services.ansible_facts.services['chatapp.service']['state'] }}"
+  tags:
+    - info
+  when: ec2_services.ansible_facts.services['chatapp.service'] is defined

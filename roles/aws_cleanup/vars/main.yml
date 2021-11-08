@@ -1,0 +1,9 @@
+---
+#Clean up variables
+aws_region: us-west-2
+ec2_name: ACIT4640_Final
+
+#VPC variabes
+vpc_prefix: ACIT4640
+vpc_subnet_cidr: 10.46.10.0/24
+vpc_cidr: 10.46.0.0/16

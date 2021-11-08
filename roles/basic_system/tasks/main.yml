@@ -1,0 +1,7 @@
+---
+- name: Turning SELinux into a permissive state.
+  selinux:
+    policy: targeted
+    state: permissive
+  tags:
+    - deploy

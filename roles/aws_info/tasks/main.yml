@@ -1,0 +1,15 @@
+---
+- name: Gathering information about EC2 instance machine
+  ec2_instance:
+    region: "{{ aws_region }}"
+    filters:
+      tag:Name: "{{ ec2_name }}"
+      instance-state-name: running
+  tags:
+    - info
+  register: ec2_data
+- debug:
+    msg: "AWS Environemt is up"
+  when: ec2_data is defined
+  tags:
+    - info

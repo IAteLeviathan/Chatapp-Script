@@ -1,0 +1,14 @@
+---
+- name: Installing nodejs package into the machine
+  package:
+    name: nodejs
+    state: present
+  tags:
+    - deploy
+
+- name: Updating packages in package.json
+  npm:
+    path: /home/{{ username }}/app/{{ github_repo }}
+    state: latest
+  tags:
+    - deploy

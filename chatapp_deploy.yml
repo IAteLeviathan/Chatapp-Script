@@ -1,0 +1,45 @@
+---
+- hosts: localhost
+  gather_facts: false
+  connection: local
+  tasks:
+    - include_role:
+        name: aws_create
+      tags:
+        - provision
+
+    - name: Refreshing inventory
+      meta: refresh_inventory  
+
+    - import_role:
+         name: aws_info
+      tags:
+        - info
+        - never
+
+    - import_role:
+         name: aws_cleanup
+      tags:
+        - cleanup
+        - never
+
+- hosts: aws_ec2
+  gather_facts: false
+  become: yes
+  tasks:
+    - include_role:
+        name: basic_system
+      tags:
+        - deploy
+
+    - include_role:
+        name: chatapp
+      tags:
+        - deploy
+
+    - import_role:
+        name: aws_info
+        tasks_from: info
+      tags:
+        - info
+        - never

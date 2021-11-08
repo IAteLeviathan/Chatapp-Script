@@ -1,0 +1,13 @@
+---
+#Shared Variables
+username: chatapp
+github_repo: anonymouse-realtime-chat-app
+
+#Mongodb Variables
+mongod_url: localhost
+
+#Nginx Variables
+port: 5000
+path: /home/chatapp/app/anonymouse-realtime-chat-app
+
+#

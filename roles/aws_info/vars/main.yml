@@ -1,0 +1,4 @@
+---
+#Info variables
+aws_region: us-west-2
+ec2_name: ACIT4640_Final
